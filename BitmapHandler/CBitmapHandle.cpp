@@ -14,7 +14,7 @@ CMyBitmap* CBitmapHandle::ReadBitmapFile(char *fileName)
 	pf_rgb = fopen(fileName, "rb");				//二进制读方式打开指定的图像文件
 	if (pf_rgb == NULL) {
 		cout << "文件\"" << fileName << "\"打开失败，请检查文件名是否正确或者文件是否存在!" << endl;
-		return false;
+		return NULL;
 	}
 	cout << "位图解析中，请稍后......" << endl;
 	//读取文件头信息
@@ -199,5 +199,88 @@ bool CBitmapHandle::GrayscaleAntiColor(CMyBitmap* originaLBmp, char* outputFileN
 	cout << "灰度位图反色成功！" << endl;
 	//关闭打开的图像文件
 	fclose(pf_gray);
+	return true;
+}
+bool CBitmapHandle::Histogram(CMyBitmap* originaLBmp, char* outputFileName) {
+	FILE *pf_bmp;
+	int pBuffer[256];			//各灰度级的像素数量
+	int maxGrayValue;			//直方图灰度最多像素数
+	float heightCompress = 1.0;	//高度压缩倍数(有的灰度值得像素个数可能过多，图的高度就得增高，
+								//为了将图片的高度保持在1000px之内，需要对其进行处理)
+	int bitHeight = 500;		//直方图高度
+	int bitWidth = 256;			//直方图宽度
+	for (int i = 0; i < 256; i++) {
+		pBuffer[i] = 0;			//各灰度像素点数置为0
+	}
+	cout << "图像直方图制作中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+	//像素点总数量
+	int pixelSum = int(originaLBmp->m_info_head.biWidth * originaLBmp->m_info_head.biHeight);
+	//遍历所有像素点
+	for (int i = 0; i< pixelSum; i++) {
+		int grayValue = int(originaLBmp->m_factdata[i]);//当前像素点的灰度值
+		pBuffer[grayValue]++;							//grayValue灰度的像素数量+1
+	}
+	//寻找最大高度
+	maxGrayValue = 0;
+	for (int i = 0; i < 256; i++) {
+		maxGrayValue = pBuffer[i] > maxGrayValue ? pBuffer[i] : maxGrayValue;
+	}
+	//计算高度压缩比例
+	heightCompress = float(maxGrayValue) / float(bitHeight);
+	//重新计算各灰度像素总数量
+	for (int i = 0; i < 256; i++) {
+		pBuffer[i] = float(pBuffer[i]) / heightCompress;
+	}
+	//写入文件头信息
+	BITMAPFILEHEADER bitmap_file_head;
+	bitmap_file_head.bfType = 'MB';
+	bitmap_file_head.bfReserved1 = 0;
+	bitmap_file_head.bfReserved2 = 0;
+	bitmap_file_head.bfSize = sizeof(BITMAPFILEHEADER)
+									+ sizeof(BITMAPINFOHEADER) 
+									+ sizeof(RGBQUAD) * 2 
+									+ sizeof(BYTE) * 256 * bitHeight;
+	bitmap_file_head.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * 2;
+	fwrite(&bitmap_file_head,sizeof(BITMAPFILEHEADER),1, pf_bmp);
+	//写入信息头信息
+	BITMAPINFOHEADER bitmap_info_head;
+	bitmap_info_head.biSize = 40;
+	bitmap_info_head.biWidth = bitWidth;
+	bitmap_info_head.biHeight = bitHeight;
+	bitmap_info_head.biPlanes = 1;
+	bitmap_info_head.biBitCount = 8;
+	bitmap_info_head.biCompression = 0;
+	bitmap_info_head.biSizeImage = bitWidth * bitHeight;
+	bitmap_info_head.biClrUsed = 2;
+	bitmap_info_head.biClrImportant = 2;
+	fwrite(&bitmap_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	RGBQUAD gbquad[2];
+	//gbquad[0]为纯黑色，gbquad[1]为纯白色
+	for (int i = 0; i < 2; i++) {
+		gbquad[i].rgbBlue = i * 255;
+		gbquad[i].rgbGreen = i * 255;
+		gbquad[i].rgbRed = i * 255;
+		gbquad[i].rgbReserved = i * 255;
+		fwrite(&gbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int gbquadIndex;
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			if (pBuffer[column] > 0) {
+				gbquadIndex = 0;
+				pBuffer[column]--; 
+			}
+			else {
+				gbquadIndex = 1;
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+	}
+	cout << "图像直方图制作成功！" << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
 	return true;
 }
