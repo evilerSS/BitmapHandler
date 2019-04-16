@@ -3,6 +3,11 @@
 #include <fstream>
 using namespace std;
 
+int CBitmapHandle::CDF(int n, float k)
+{ 
+	return 255 * k;
+}
+
 CBitmapHandle::CBitmapHandle()
 {
 }
@@ -207,7 +212,7 @@ bool CBitmapHandle::Histogram(CMyBitmap* originaLBmp, char* outputFileName) {
 	int maxGrayValue;			//直方图灰度最多像素数
 	float heightCompress = 1.0;	//高度压缩倍数(有的灰度值得像素个数可能过多，图的高度就得增高，
 								//为了将图片的高度保持在1000px之内，需要对其进行处理)
-	int bitHeight = 500;		//直方图高度
+	int bitHeight = 250;		//直方图高度
 	int bitWidth = 256;			//直方图宽度
 	for (int i = 0; i < 256; i++) {
 		pBuffer[i] = 0;			//各灰度像素点数置为0
@@ -280,6 +285,64 @@ bool CBitmapHandle::Histogram(CMyBitmap* originaLBmp, char* outputFileName) {
 		}
 	}
 	cout << "图像直方图制作成功！" << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+	return true;
+}
+bool CBitmapHandle::HistogramEqualization(CMyBitmap* originaLBmp, char* outputFileName) {
+	FILE *pf_bmp;
+	int pxielNum[256];
+	double pRobabilityFunc[256];//累计概率分布函数
+	for (int i = 0; i < 256; i++) {
+		pxielNum[i] = 0;
+		pRobabilityFunc[i] = 0.0f;
+	}
+
+	cout << "灰度图均衡化中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+	
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//计算灰度像素点
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			int index = originaLBmp->m_factdata[row * bitWidth + column];
+			pxielNum[index]++;
+		}
+	}
+	//计算累计分布函数
+	pRobabilityFunc[0] = double(pxielNum[0]) / (bitHeight* bitWidth);
+	for (int i = 1; i < 256; i++) {
+		pRobabilityFunc[i] = pRobabilityFunc[i-1]+ double(pxielNum[i]) / (bitHeight* bitWidth);
+	}
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	//位深度
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			//写入灰度图像
+			BYTE gbquadIndex = 255 * pRobabilityFunc[int(originaLBmp->m_factdata[row * bitWidth + column])];
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+
+	cout << "灰度图均衡化成功！" << endl;
 	//关闭打开的图像文件
 	fclose(pf_bmp);
 	return true;
