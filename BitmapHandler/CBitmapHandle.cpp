@@ -1,6 +1,8 @@
 #include "CBitmapHandle.h"
 #include <Iostream>
 #include <fstream>
+#include <math.h>
+
 using namespace std;
 
 int CBitmapHandle::CDF(int n, float k)
@@ -54,7 +56,7 @@ CMyBitmap* CBitmapHandle::ReadBitmapFile(char *fileName)
 		//跳过补位信息
 		fseek(pf_rgb, sizeof(BYTE)*platoon_bit, SEEK_CUR);
 	}
-	cout << "位图解析成功！" << endl;
+	cout << "位图解析成功！" << endl << endl;
 	return returnBitmap;
 }
 bool CBitmapHandle::SeparateRGB(CMyBitmap* originaLBmp, char* outputFileNameR, char* outputFileNameG, char* outputFileNameB) {
@@ -100,12 +102,11 @@ bool CBitmapHandle::SeparateRGB(CMyBitmap* originaLBmp, char* outputFileNameR, c
 		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_g);
 		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_r);
 	}
-	cout << "位图三原色分离成功！" << endl;
+	cout << "位图三原色分离成功！" << endl << endl;
 	//关闭打开的图像文件
 	fclose(pf_r);
 	fclose(pf_g);
 	fclose(pf_b);
-	return true;
 	return true;
 }
 bool CBitmapHandle::GrayscaleBitmap(CMyBitmap* originaLBmp, char* outputFileName) {
@@ -143,7 +144,6 @@ bool CBitmapHandle::GrayscaleBitmap(CMyBitmap* originaLBmp, char* outputFileName
 		targetBitmap->m_rgbquad[i] = newRgbQ;
 		fwrite(&targetBitmap->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_gray);
 	}
-
 	//位深度
 	int biBitCount = targetBitmap->m_info_head.biBitCount;
 	//补位字节数
@@ -201,22 +201,18 @@ bool CBitmapHandle::GrayscaleAntiColor(CMyBitmap* originaLBmp, char* outputFileN
 		BYTE zero = 0;
 		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_gray);
 	}
-	cout << "灰度位图反色成功！" << endl;
+	cout << "灰度位图反色成功！" << endl << endl;
 	//关闭打开的图像文件
 	fclose(pf_gray);
 	return true;
 }
 bool CBitmapHandle::Histogram(CMyBitmap* originaLBmp, char* outputFileName) {
 	FILE *pf_bmp;
-	int pBuffer[256];			//各灰度级的像素数量
+	int pBuffer[256] = {0};			//各灰度级的像素数量
 	int maxGrayValue;			//直方图灰度最多像素数
-	float heightCompress = 1.0;	//高度压缩倍数(有的灰度值得像素个数可能过多，图的高度就得增高，
-								//为了将图片的高度保持在1000px之内，需要对其进行处理)
+	float heightCompress = 1.0f;//高度压缩倍数
 	int bitHeight = 250;		//直方图高度
 	int bitWidth = 256;			//直方图宽度
-	for (int i = 0; i < 256; i++) {
-		pBuffer[i] = 0;			//各灰度像素点数置为0
-	}
 	cout << "图像直方图制作中，请稍后......" << endl;
 	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
 	//像素点总数量
@@ -284,7 +280,7 @@ bool CBitmapHandle::Histogram(CMyBitmap* originaLBmp, char* outputFileName) {
 			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
 		}
 	}
-	cout << "图像直方图制作成功！" << endl;
+	cout << "图像直方图制作成功！" << endl << endl;
 	//关闭打开的图像文件
 	fclose(pf_bmp);
 	return true;
@@ -326,7 +322,6 @@ bool CBitmapHandle::HistogramEqualization(CMyBitmap* originaLBmp, char* outputFi
 		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
 	}
 	//写入真实数据
-	//位深度
 	int biBitCount = originaLBmp->m_info_head.biBitCount;
 	//补位字节数
 	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
@@ -341,9 +336,709 @@ bool CBitmapHandle::HistogramEqualization(CMyBitmap* originaLBmp, char* outputFi
 		BYTE zero = 0;
 		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
 	}
-
-	cout << "灰度图均衡化成功！" << endl;
+	cout << "灰度图均衡化成功！" << endl << endl;
 	//关闭打开的图像文件
 	fclose(pf_bmp);
 	return true;
 }
+
+
+// 平均处理（基于模板卷积运算）（处理边界点）
+bool CBitmapHandle::AverageHandleWithBorder(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "灰度图降噪中(平均处理，包含边界)，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			//写入灰度图像
+			BYTE gbquadIndex;
+			int filter[9];
+			//计算平均值
+			filter[0] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth? row:(row + 1)) * bitWidth + ((column - 1) < 0 ? column: (column - 1))]);
+			filter[1] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth ? row : (row + 1)) * bitWidth + column]);
+			filter[2] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth ? row : (row + 1)) * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			filter[3] = int(originaLBmp->m_factdata[row * bitWidth + ((column - 1) < 0 ? column : (column - 1))]);
+			filter[4] = int(originaLBmp->m_factdata[row * bitWidth + column]);
+			filter[5] = int(originaLBmp->m_factdata[row * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			filter[6] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + ((column - 1) < 0 ? column : (column - 1))]);
+			filter[7] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + column]);
+			filter[8] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			int sum = 0;
+			for (int i = 0; i < 9; i++)
+			{
+				sum += filter[i];
+			}
+			int result = sum / 9;
+			if (result - 255 > 0) {
+				result = 255;
+			}
+			if (result < 0) {
+				result = 0;
+			}
+			gbquadIndex = result;
+
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "灰度图降噪成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+// 平均处理（基于模板卷积运算）（不处理边界点）
+bool CBitmapHandle::AverageHandleWithoutBorder(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "灰度图降噪中(平均处理，不包含边界)，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			//写入灰度图像
+			BYTE gbquadIndex;
+			if (row == 0 || row == bitHeight - 1 || column == 0 || column == bitWidth - 1) {//边界：不处理
+				gbquadIndex = int(originaLBmp->m_factdata[row * bitWidth + column]);
+			}
+			else {//非边界：平均处理
+				// 计算平均值
+				int filter[9];
+				filter[0] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + (column - 1)]);
+				filter[1] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + column]);
+				filter[2] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + (column + 1)]);
+				filter[3] = int(originaLBmp->m_factdata[row * bitWidth + (column - 1)]);
+				filter[4] = int(originaLBmp->m_factdata[row * bitWidth + column]);
+				filter[5] = int(originaLBmp->m_factdata[row * bitWidth + (column + 1)]);
+				filter[6] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + (column - 1)]);
+				filter[7] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + column]);
+				filter[8] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + (column + 1)]);
+				int sum = 0;
+				for (int i = 0; i < 9; i++)
+				{
+					sum += filter[i];
+				}
+				int result = sum / 9;
+				if (result - 255 > 0) {
+					result = 255;
+				}
+				if (result < 0) {
+					result = 0;
+				}
+				gbquadIndex = result;
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "灰度图降噪成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+// 中值滤波（处理边界点）
+bool CBitmapHandle::MedianFilterWithBorder(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "灰度图降噪中(中值滤波，包含边界)，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			//写入灰度图像
+			BYTE gbquadIndex;
+			int filter[9];
+			//计算平均值
+			filter[0] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth ? row : (row + 1)) * bitWidth + ((column - 1) < 0 ? column : (column - 1))]);
+			filter[1] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth ? row : (row + 1)) * bitWidth + column]);
+			filter[2] = int(originaLBmp->m_factdata[((row + 1) >= bitWidth ? row : (row + 1)) * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			filter[3] = int(originaLBmp->m_factdata[row * bitWidth + ((column - 1) < 0 ? column : (column - 1))]);
+			filter[4] = int(originaLBmp->m_factdata[row * bitWidth + column]);
+			filter[5] = int(originaLBmp->m_factdata[row * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			filter[6] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + ((column - 1) < 0 ? column : (column - 1))]);
+			filter[7] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + column]);
+			filter[8] = int(originaLBmp->m_factdata[((row - 1) < 0 ? 0 : (row - 1)) * bitWidth + ((column + 1) >= bitWidth ? column : (column + 1))]);
+			//排序
+			for (int i = 0; i < 8; i++) {
+				for (int j = i + 1; j < 9; j++) {
+					if (filter[i] > filter[j]) {
+						int temp = filter[i];
+						filter[i] = filter[j];
+						filter[j] = temp;
+					}
+				}
+			}
+			gbquadIndex = filter[4];
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "灰度图降噪成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+// 中值滤波（不处理边界点）
+bool CBitmapHandle::MedianFilterWithoutBorder(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "灰度图降噪中(中值滤波，不包含边界)，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			//写入灰度图像
+			BYTE gbquadIndex;
+			if (row == 0 || row == bitHeight - 1 || column == 0 || column == bitWidth - 1) {//边界：不处理
+				gbquadIndex = int(originaLBmp->m_factdata[row * bitWidth + column]);
+			}
+			else {//非边界：平均处理
+				// 计算平均值
+				int filter[9];
+				filter[0] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + (column - 1)]);
+				filter[1] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + column]);
+				filter[2] = int(originaLBmp->m_factdata[(row + 1) * bitWidth + (column + 1)]);
+				filter[3] = int(originaLBmp->m_factdata[row * bitWidth + (column - 1)]);
+				filter[4] = int(originaLBmp->m_factdata[row * bitWidth + column]);
+				filter[5] = int(originaLBmp->m_factdata[row * bitWidth + (column + 1)]);
+				filter[6] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + (column - 1)]);
+				filter[7] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + column]);
+				filter[8] = int(originaLBmp->m_factdata[(row - 1) * bitWidth + (column + 1)]);
+				//排序
+				for (int i = 0; i < 8; i++) {
+					for (int j = i + 1; j < 9; j++) {
+						if (filter[i] > filter[j]) {
+							int temp = filter[i];
+							filter[i] = filter[j];
+							filter[j] = temp;
+						}
+					}
+				}
+				gbquadIndex = filter[4];
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "灰度图降噪成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 图像缩放
+bool CBitmapHandle::BitmapScale(CMyBitmap* originaLBmp, char* outputFileName, float x, float y)
+{
+	FILE *pf_bmp;
+	cout << "图像缩放中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	BITMAPINFOHEADER new_info_head = originaLBmp->m_info_head;
+	new_info_head.biWidth = LONG(new_info_head.biWidth * x);
+	new_info_head.biHeight = LONG(new_info_head.biHeight * y);
+	new_info_head.biSizeImage = (new_info_head.biWidth * (new_info_head.biBitCount / 8) + 3) / 4 * 4 * new_info_head.biHeight;
+	fwrite(&new_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = new_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = new_info_head.biSizeImage / new_info_head.biHeight
+		- new_info_head.biWidth * (biBitCount / 8);
+	BYTE zero = 0;
+	int bitHeight = new_info_head.biHeight;		//新图高度
+	int bitWidth = new_info_head.biWidth;		//新图宽度
+	//缩小
+	float cX = 1 / x;
+	float cY = 1 / y;
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			BYTE gbquadIndex = originaLBmp->m_factdata[int(cY * row) * originaLBmp->m_info_head.biWidth + int(cX * column)];
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+
+	cout << "图像缩放成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 图像平移
+bool CBitmapHandle::BitmapTranslation(CMyBitmap* originaLBmp, char* outputFileName, int x, int y)
+{
+	FILE *pf_bmp;
+	cout << "图像平移中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			int rowIndex = row - y;
+			int columnIndex = column - x;
+			BYTE gbquadIndex = 0;
+			if (rowIndex < 0 || rowIndex >= bitHeight || columnIndex < 0 || columnIndex >= bitWidth) {
+				gbquadIndex = 0;
+			}
+			else {
+				gbquadIndex = originaLBmp->m_factdata[rowIndex * bitWidth + columnIndex];
+			}			
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像平移成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 图像镜像
+bool CBitmapHandle::BitmapMirror(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "图像镜像图生成中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			BYTE gbquadIndex = originaLBmp->m_factdata[row * bitWidth + (bitWidth - column)];
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像镜像图生成成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 图像旋转
+bool CBitmapHandle::BitmapRotate(CMyBitmap* originaLBmp, char* outputFileName, int angle)
+{
+	FILE *pf_bmp;
+	cout << "图像旋转中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	POINT center;
+	center.x = LONG(originaLBmp->m_info_head.biWidth / 2);
+	center.y = LONG(originaLBmp->m_info_head.biHeight / 2);
+	float byta = angle;
+	BYTE gbquadIndex;
+
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			int xOriginal = column * cos(byta * 0.01745) - row * sin(byta * 0.01745);
+			int yOriginal = column * sin(byta * 0.01745) + row * cos(byta * 0.01745);
+
+			if (xOriginal < 0 || xOriginal >= bitWidth || yOriginal < 0 || yOriginal >= bitHeight) {
+				gbquadIndex = 0;
+			}
+			else {
+				gbquadIndex = originaLBmp->m_factdata[yOriginal * bitWidth + xOriginal];
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像旋转成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 阈值分割：给定T
+bool CBitmapHandle::ThresholdDivisionT(CMyBitmap* originaLBmp, char* outputFileName, int t)
+{
+	FILE *pf_bmp;
+	cout << "图像阈值分割（给定的T为 "<< t <<" ）中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	BYTE gbquadIndex;
+
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {	
+			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
+				gbquadIndex = 0;
+			}
+			else {
+				gbquadIndex = 255;
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像阈值分割（给定T）成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 阈值分割：迭代阈值法
+bool CBitmapHandle::ThresholdDivisionIteration(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "图像阈值分割（迭代阈值法）中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	int t = 128;		//初始化阈值
+	int pGrayNum[256] = {0};	//各灰度级的像素数量
+	//灰度密度函数统计
+	//像素点总数量
+	int pixelSum = int(originaLBmp->m_info_head.biWidth * originaLBmp->m_info_head.biHeight);
+	//遍历所有像素点
+	for (int i = 0; i < pixelSum; i++) {
+		int grayValue = int(originaLBmp->m_factdata[i]);//当前像素点的灰度值
+		pGrayNum[grayValue]++;							//grayValue灰度的像素数量+1
+	}
+	//迭代计算最佳阈值
+	t = IterationT(pGrayNum, 128);
+	cout << "最佳阈值为：" << t << endl;
+	BYTE gbquadIndex;
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
+				gbquadIndex = 0;
+			}
+			else {
+				gbquadIndex = 255;
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像阈值分割（迭代阈值法）成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 阈值分割：Otsu
+bool CBitmapHandle::ThresholdDivisionOtsu(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "图像阈值分割（Otsu法）中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	////灰度密度函数统计
+	////像素点总数量
+	//int pixelSum = int(originaLBmp->m_info_head.biWidth * originaLBmp->m_info_head.biHeight);
+	////遍历所有像素点
+	//for (int i = 0; i < pixelSum; i++) {
+	//	int grayValue = int(originaLBmp->m_factdata[i]);//当前像素点的灰度值
+	//	pGrayNum[grayValue]++;							//grayValue灰度的像素数量+1
+	//}
+	////迭代计算最佳阈值
+	//t = IterationT(pGrayNum, 128);
+	int t = 0;				//最佳阈值
+	float pGrayNum[256] = { 0 };	//各灰度级的像素数量
+	float wk[256] = { 0 };	//灰度级0到k的像素的出现概率
+	float uk[256] = { 0 };	//平均灰度
+	float variance = 0;		//类间方差
+	float maxVariance = variance;//最大类间方差
+	//像素点总数量
+	int pixelSum = int(originaLBmp->m_info_head.biWidth * originaLBmp->m_info_head.biHeight);
+
+	//遍历所有像素点
+	for (int i = 0; i < pixelSum; i++) {
+		int grayValue = int(originaLBmp->m_factdata[i]);//当前像素点的灰度值
+		pGrayNum[grayValue]++;							//grayValue灰度的像素数量+1
+	}
+
+	for (int i = 0; i < 256; i++) {
+		if (i == 0) {
+			wk[i] = pGrayNum[i] / pixelSum;
+			uk[i] = i * wk[i];
+		}
+		else {
+			wk[i] = pGrayNum[i] / pixelSum + wk[i - 1];
+			for (int j = 0; j < i+1; j++)
+			{
+				uk[i] += j * pGrayNum[j] / pixelSum;
+			}
+		}
+	}
+	for (int i = 1; i < 255; i++)
+	{
+		variance = wk[i] * (wk[255] - wk[i]) * pow( uk[i] * (uk[255] - uk[i]), 2);
+		if (variance > maxVariance) {//如果当前方差大于最大方差
+			maxVariance = variance;	//更新最大方差
+			t = i;					//更新最佳阈值
+		}
+	}
+	//阈值方差计算
+	cout << "最佳阈值为：" << t << endl;
+	BYTE gbquadIndex;
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
+				gbquadIndex = 0;
+			}
+			else {
+				gbquadIndex = 255;
+			}
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像阈值分割（Otsu法）成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 阈值计算迭代函数
+int CBitmapHandle::IterationT(int *grayNum, int oldT)
+{
+	int newT = 0;
+	int u1 = 0, u2 = 0;
+	int numerator = 0, denominator = 0;
+	for (int i = 0; i < 128; i++)
+	{	
+		numerator += i * grayNum[i];
+		denominator += grayNum[i];
+	}
+	u1 = numerator / denominator;
+	numerator = 0;
+	denominator = 0;
+	for (int i = 128; i < 255; i++)
+	{
+		numerator += i * grayNum[i];
+		denominator += grayNum[i];
+	}
+	u2 = numerator / denominator;
+	newT = 0.5 * (u1 + u2);
+
+	if (newT - oldT < 2) {
+		return newT;
+	}
+	else {
+		return IterationT(grayNum, newT);
+	}
+}
+

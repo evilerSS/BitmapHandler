@@ -21,5 +21,30 @@ public:
 	bool Histogram(CMyBitmap* originaLBmp, char* outputFileName);
 	//直方图均衡化
 	bool HistogramEqualization(CMyBitmap* originaLBmp, char* outputFileName);
+	// 平均处理（基于模板卷积运算）（处理边界点）
+	bool AverageHandleWithBorder(CMyBitmap* originaLBmp, char* outputFileName);
+	// 平均处理（基于模板卷积运算）（不处理边界点）
+	bool AverageHandleWithoutBorder(CMyBitmap* originaLBmp, char* outputFileName);
+	// 中值滤波（处理边界点）
+	bool MedianFilterWithBorder(CMyBitmap* originaLBmp, char* outputFileName);
+	// 中值滤波（不处理边界点）
+	bool MedianFilterWithoutBorder(CMyBitmap* originaLBmp, char* outputFileName);
+	// 图像缩放
+	bool BitmapScale(CMyBitmap* originaLBmp, char* outputFileName, float x, float y);
+	// 图像平移
+	bool BitmapTranslation(CMyBitmap* originaLBmp, char* outputFileName, int x, int y);
+	// 图像镜像
+	bool BitmapMirror(CMyBitmap* originaLBmp, char* outputFileName);
+	// 图像旋转
+	bool BitmapRotate(CMyBitmap* originaLBmp, char* outputFileName, int angle);
+	// 阈值分割：给定T
+	bool ThresholdDivisionT(CMyBitmap* originaLBmp, char* outputFileName, int t);
+	// 阈值分割：迭代阈值法
+	bool ThresholdDivisionIteration(CMyBitmap* originaLBmp, char* outputFileName);
+	// 阈值分割：Otsu
+	bool ThresholdDivisionOtsu(CMyBitmap* originaLBmp, char* outputFileName);
+	// 阈值计算迭代函数
+	int IterationT(int *grayNum, int oldT);
+
 };
 
