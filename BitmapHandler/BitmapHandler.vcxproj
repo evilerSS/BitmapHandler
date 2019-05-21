@@ -21,12 +21,17 @@
   <ItemGroup>
     <ClInclude Include="CBitmapHandle.h" />
     <ClInclude Include="CMyBitmap.h" />
+    <ClInclude Include="fourtree.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="struct.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CBitmapHandle.cpp" />
     <ClCompile Include="CMyBitmap.cpp" />
     <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="BitmapHandler.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>

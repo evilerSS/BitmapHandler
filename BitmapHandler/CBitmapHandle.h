@@ -45,6 +45,11 @@ public:
 	bool ThresholdDivisionOtsu(CMyBitmap* originaLBmp, char* outputFileName);
 	// 阈值计算迭代函数
 	int IterationT(int *grayNum, int oldT);
-
+	// 基于种子点进行区域增长
+	bool RegionGrowingWithSeed(CMyBitmap* originaLBmp, char* outputFileName, POINT seedPoint, int t);
+	// 无种子点的区域增长
+	bool RegionGrowingWithoutSeed(CMyBitmap* originaLBmp, char* outputFileName);
+	// 判断是否满足一致性谓词
+	//bool isSatisfyConsistency(BYTE* data, int width, int height);
 };
 

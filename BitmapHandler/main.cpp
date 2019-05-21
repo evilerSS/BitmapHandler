@@ -8,6 +8,7 @@ int main() {
 	char fileNameOriginal[] = "./bitmaps/bitmap1.bmp";	//要处理的原图像1
 	char fileNameOriginal2[] = "./bitmaps/bitmap2.bmp";	//要处理的原图像2:有噪声的图像
 	char fileNameOriginal3[] = "./bitmaps/bitmap3.bmp";	//要处理的原图像3
+	char fileNameOriginal4[] = "./bitmaps/bitmap4.bmp";	//要处理的原图像4
 
 	char fileNameR[] = "./bitmaps/1/bitmap_r.bmp";		//分离rgb中的R形成的图像
 	char fileNameG[] = "./bitmaps/1/bitmap_g.bmp";		//分离rgb中的G形成的图像
@@ -29,15 +30,19 @@ int main() {
 	char fileNameMirror[] = "./bitmaps/4/bitmap_mirror.bmp";//镜像
 	char fileNameRotate[] = "./bitmaps/4/bitmap_rotate.bmp";//镜像
 
-	char fileNameThresholdDivisionT[] = "./bitmaps/5/bitmap_threshold_division_t.bmp";
-	char fileNameThresholdDivisionIteration[] = "./bitmaps/5/bitmap_threshold_division_interation.bmp";
-	char fileNameThresholdDivisionOtsu[] = "./bitmaps/5/bitmap_threshold_division_otsu.bmp";
+	char fileNameThresholdDivisionT[] = "./bitmaps/5/bitmap_threshold_division_t.bmp";//阈值分割：给定T
+	char fileNameThresholdDivisionIteration[] = "./bitmaps/5/bitmap_threshold_division_interation.bmp";//阈值分割：迭代阈值法
+	char fileNameThresholdDivisionOtsu[] = "./bitmaps/5/bitmap_threshold_division_otsu.bmp";//阈值分割：Otsu
+
+	char fileNameRegionGrowingWithSeed[] = "./bitmaps/6/bitmap_region_growing_with_seed.bmp";//基于种子点进行区域增长
+	char fileNameRegionGrowingWithoutSeed[] = "./bitmaps/6/bitmap_region_growing_without_seed.bmp";//无种子点的区域增长
 
 	//要处理的图像对象
 	CMyBitmap		*myBitmap,		//原图1
 					*myGrayBitmap,	//灰度图
 					*myGrayBitmap2,	//灰度图2（均衡化后的）
-					*myGrayBitmap3,	//灰度图2（均衡化后的）
+					*myGrayBitmap3,	//灰度图3（均衡化后的）
+					*myGrayBitmap4,	//灰度图4
 					*noiseBitmap;	//有噪声的图像
 
 	CBitmapHandle	myBitmapHandler;//图像处理工具对象
@@ -80,13 +85,23 @@ int main() {
 		myBitmapHandler.BitmapMirror(noiseBitmap, fileNameMirror);
 		myBitmapHandler.BitmapRotate(noiseBitmap, fileNameRotate, -20);
 	}
-	//解析均衡化后的灰度图
+	//解析要处理的灰度图
 	myGrayBitmap3 = myBitmapHandler.ReadBitmapFile(fileNameOriginal3);
 	if (myGrayBitmap3 != NULL) {
 		//阈值分割
 		myBitmapHandler.ThresholdDivisionT(myGrayBitmap3, fileNameThresholdDivisionT, 128);
 		myBitmapHandler.ThresholdDivisionIteration(myGrayBitmap3, fileNameThresholdDivisionIteration);
 		myBitmapHandler.ThresholdDivisionOtsu(myGrayBitmap3, fileNameThresholdDivisionOtsu);
+	}
+	// 解析要处理的灰度图
+	myGrayBitmap4 = myBitmapHandler.ReadBitmapFile(fileNameOriginal4);
+	if (myGrayBitmap4 != NULL) {
+		//区域增长
+		POINT seedPoint;
+		seedPoint.x = 350;
+		seedPoint.y = 891;
+		myBitmapHandler.RegionGrowingWithSeed(myGrayBitmap4, fileNameRegionGrowingWithSeed, seedPoint, 90);
+		myBitmapHandler.RegionGrowingWithoutSeed(myGrayBitmap4, fileNameRegionGrowingWithoutSeed);
 	}
 	system("pause");
 	return 0;

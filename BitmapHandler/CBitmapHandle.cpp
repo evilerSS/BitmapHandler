@@ -1,14 +1,16 @@
 #include "CBitmapHandle.h"
+#include "fourtree.h"
 #include <Iostream>
 #include <fstream>
 #include <math.h>
+#include<stack>
 
 using namespace std;
 
-int CBitmapHandle::CDF(int n, float k)
-{ 
-	return 255 * k;
-}
+//int CBitmapHandle::CDF(int n, float k)
+//{ 
+//	return 255 * k;
+//}
 
 CBitmapHandle::CBitmapHandle()
 {
@@ -838,10 +840,10 @@ bool CBitmapHandle::ThresholdDivisionT(CMyBitmap* originaLBmp, char* outputFileN
 	for (int row = 0; row < bitHeight; row++) {
 		for (int column = 0; column < bitWidth; column++) {	
 			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
-				gbquadIndex = 0;
+				gbquadIndex = 255;
 			}
 			else {
-				gbquadIndex = 255;
+				gbquadIndex = 0;
 			}
 			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
 		}
@@ -898,10 +900,10 @@ bool CBitmapHandle::ThresholdDivisionIteration(CMyBitmap* originaLBmp, char* out
 	for (int row = 0; row < bitHeight; row++) {
 		for (int column = 0; column < bitWidth; column++) {
 			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
-				gbquadIndex = 0;
+				gbquadIndex = 255;
 			}
 			else {
-				gbquadIndex = 255;
+				gbquadIndex = 0;
 			}
 			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
 		}
@@ -941,18 +943,8 @@ bool CBitmapHandle::ThresholdDivisionOtsu(CMyBitmap* originaLBmp, char* outputFi
 	//补位字节数
 	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
 		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
-	////灰度密度函数统计
-	////像素点总数量
-	//int pixelSum = int(originaLBmp->m_info_head.biWidth * originaLBmp->m_info_head.biHeight);
-	////遍历所有像素点
-	//for (int i = 0; i < pixelSum; i++) {
-	//	int grayValue = int(originaLBmp->m_factdata[i]);//当前像素点的灰度值
-	//	pGrayNum[grayValue]++;							//grayValue灰度的像素数量+1
-	//}
-	////迭代计算最佳阈值
-	//t = IterationT(pGrayNum, 128);
 	int t = 0;				//最佳阈值
-	float pGrayNum[256] = { 0 };	//各灰度级的像素数量
+	float pGrayNum[256] = { 0 };//各灰度级的像素数量
 	float wk[256] = { 0 };	//灰度级0到k的像素的出现概率
 	float uk[256] = { 0 };	//平均灰度
 	float variance = 0;		//类间方差
@@ -993,10 +985,10 @@ bool CBitmapHandle::ThresholdDivisionOtsu(CMyBitmap* originaLBmp, char* outputFi
 	for (int row = 0; row < bitHeight; row++) {
 		for (int column = 0; column < bitWidth; column++) {
 			if (originaLBmp->m_factdata[row * bitWidth + column] > t) {
-				gbquadIndex = 0;
+				gbquadIndex = 255;
 			}
 			else {
-				gbquadIndex = 255;
+				gbquadIndex = 0;
 			}
 			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
 		}
@@ -1018,7 +1010,7 @@ int CBitmapHandle::IterationT(int *grayNum, int oldT)
 	int newT = 0;
 	int u1 = 0, u2 = 0;
 	int numerator = 0, denominator = 0;
-	for (int i = 0; i < 128; i++)
+	for (int i = 0; i < oldT; i++)
 	{	
 		numerator += i * grayNum[i];
 		denominator += grayNum[i];
@@ -1026,7 +1018,7 @@ int CBitmapHandle::IterationT(int *grayNum, int oldT)
 	u1 = numerator / denominator;
 	numerator = 0;
 	denominator = 0;
-	for (int i = 128; i < 255; i++)
+	for (int i = oldT; i < 255; i++)
 	{
 		numerator += i * grayNum[i];
 		denominator += grayNum[i];
@@ -1042,3 +1034,216 @@ int CBitmapHandle::IterationT(int *grayNum, int oldT)
 	}
 }
 
+
+
+// 基于种子点进行区域增长
+bool CBitmapHandle::RegionGrowingWithSeed(CMyBitmap* originaLBmp, char* outputFileName, POINT seedPoint, int t)
+{
+	FILE *pf_bmp;
+	cout << "图像分割（基于种子点进行区域增长）中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+
+	BYTE gbquadIndex;
+	stack<POINT> seeds;
+	POINT point = seedPoint,
+		temppoint = seedPoint;//临时存放种子的中间变量
+	int *pixel = new int[bitWidth * bitHeight];
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			pixel[row * bitWidth + column] = 0;
+		}
+	}
+	//种子点像素值设置
+	pixel[seedPoint.y * bitWidth + seedPoint.x] = 255;
+	// 基于种子点的区域增长开始
+	//cout << seedPoint.x << "," << seedPoint.y << "," << int(originaLBmp->m_factdata[(point.y + 1) * bitWidth + (point.x - 1)]) << endl;
+	seeds.push(seedPoint);
+	while (!seeds.empty())
+	{
+		point = seeds.top();//返回栈顶元素，不删除
+		seeds.pop();//删除栈顶元素
+		//cout << point.x << "," << point.y << ";  ";
+		if (point.x > 0 && point.x < bitWidth - 1 && point.y > 0 && point.y < bitHeight - 1) {//是否为非边界像素
+			int currentGray  = int(originaLBmp->m_factdata[point.x * bitWidth + point.y]);
+			//cout << currentGray << ";  ";
+			int index;
+			//左上
+			index = (point.y + 1) * bitWidth + (point.x - 1);
+			//cout << "当前像素灰度：" << currentGray << ";  " << "左上角："<<int(originaLBmp->m_factdata[index])<< endl;
+			if (pixel[index] == 0
+				&& 
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x - 1;
+				temppoint.y = point.y + 1;
+				seeds.push(temppoint);
+			}
+			//上
+			index = (point.y + 1) * bitWidth + (point.x);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x;
+				temppoint.y = point.y + 1;
+				seeds.push(temppoint);
+			}
+			//右上
+			index = (point.y + 1) * bitWidth + (point.x + 1);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x + 1;
+				temppoint.y = point.y + 1;
+				seeds.push(temppoint);
+			}
+			//左
+			index = (point.y) * bitWidth + (point.x - 1);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x - 1;
+				temppoint.y = point.y;
+				seeds.push(temppoint);
+			}
+			//右
+			index = (point.y) * bitWidth + (point.x + 1);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x + 1;
+				temppoint.y = point.y ;
+				seeds.push(temppoint);
+			}
+			//左下
+			index = (point.y - 1) * bitWidth + (point.x - 1);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x - 1;
+				temppoint.y = point.y - 1;
+				seeds.push(temppoint);
+			//下
+			index = (point.y - 1) * bitWidth + (point.x);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+					//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x;
+				temppoint.y = point.y - 1;
+				seeds.push(temppoint);
+				}
+			}
+			//右下
+			index = (point.y - 1) * bitWidth + (point.x + 1);
+			if (pixel[index] == 0
+				&&
+				abs(int(originaLBmp->m_factdata[index]) - currentGray) < t) {
+				//如果满足增长条件
+				pixel[index] = 255;
+				temppoint.x = point.x + 1;
+				temppoint.y = point.y - 1;
+				seeds.push(temppoint);
+			}
+		}
+	}
+
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			gbquadIndex = pixel[row * bitWidth + column];
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像分割（基于种子点进行区域增长）成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+
+// 无种子点的区域增长
+bool CBitmapHandle::RegionGrowingWithoutSeed(CMyBitmap* originaLBmp, char* outputFileName)
+{
+	FILE *pf_bmp;
+	cout << "图像分割（分裂合并）中，请稍后......" << endl;
+	pf_bmp = fopen(outputFileName, "wb");//二进制读方式创建8位灰度图像文件
+
+	int bitHeight = originaLBmp->m_info_head.biHeight;		//原图高度
+	int bitWidth = originaLBmp->m_info_head.biWidth;		//原图宽度
+	//输出图片
+	//写入文件头
+	fwrite(&originaLBmp->m_file_head, sizeof(BITMAPFILEHEADER), 1, pf_bmp);
+	//写入信息头
+	fwrite(&originaLBmp->m_info_head, sizeof(BITMAPINFOHEADER), 1, pf_bmp);
+	//写入调色板
+	for (int i = 0; i < originaLBmp->m_info_head.biClrUsed; i++)
+	{
+		fwrite(&originaLBmp->m_rgbquad[i], sizeof(RGBQUAD), 1, pf_bmp);
+	}
+	//写入真实数据
+	int biBitCount = originaLBmp->m_info_head.biBitCount;
+	//补位字节数
+	int platoon_bit = originaLBmp->m_info_head.biSizeImage / originaLBmp->m_info_head.biHeight
+		- originaLBmp->m_info_head.biWidth * (biBitCount / 8);
+	int gbquadIndex;
+	for (int row = 0; row < bitHeight; row++) {
+		for (int column = 0; column < bitWidth; column++) {
+			gbquadIndex = 0;
+			//待完善
+			fwrite(&gbquadIndex, sizeof(BYTE), 1, pf_bmp);
+		}
+		//补齐
+		BYTE zero = 0;
+		fwrite(&zero, sizeof(BYTE)*platoon_bit, 1, pf_bmp);
+	}
+	cout << "图像分割（分裂合并）成功！" << endl << endl;
+	//关闭打开的图像文件
+	fclose(pf_bmp);
+
+	return true;
+}
+
+//
+//// 判断是否满足一致性谓词
+//bool CBitmapHandle::isSatisfyConsistency(BYTE* data, int width, int height)
+//{
+//	int averageGray = 0;//区域灰度均值
+//	int t = 10;			//灰度级的标准差
+//	int pixelSum = width * height;	//区域像素总数
+//	int pixelFit = 0;	//满足条件的像素总数
+//
+//	return false;
+//}
