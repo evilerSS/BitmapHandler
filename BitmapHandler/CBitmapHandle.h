@@ -49,7 +49,17 @@ public:
 	bool RegionGrowingWithSeed(CMyBitmap* originaLBmp, char* outputFileName, POINT seedPoint, int t);
 	// 无种子点的区域增长
 	bool RegionGrowingWithoutSeed(CMyBitmap* originaLBmp, char* outputFileName);
-	// 判断是否满足一致性谓词
-	//bool isSatisfyConsistency(BYTE* data, int width, int height);
+	// 边缘检测：Prewitt
+	bool EdgeDetectionPrewitt(CMyBitmap* originaLBmp, char* outputFileName);
+	// 边缘检测：Sobel
+	bool EdgeDetectionSobel(CMyBitmap* originaLBmp, char* outputFileName);
+	// 边缘检测：LOG
+	bool EdgeDetectionLOG(CMyBitmap* originaLBmp, char* outputFileName);
+	// 直线检测：Hough变换
+	bool LineDetectionHough(CMyBitmap* originaLBmp, char* outputFileName);
+	// 连通域分析
+	bool ConnectedDomainAnalysis(CMyBitmap* originaLBmp, char* outputFileName);
+	// 轮廓提取
+	bool OutlineExtract(CMyBitmap* originaLBmp, char* outputFileName);
 };
 

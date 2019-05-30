@@ -9,6 +9,9 @@ int main() {
 	char fileNameOriginal2[] = "./bitmaps/bitmap2.bmp";	//要处理的原图像2:有噪声的图像
 	char fileNameOriginal3[] = "./bitmaps/bitmap3.bmp";	//要处理的原图像3
 	char fileNameOriginal4[] = "./bitmaps/bitmap4.bmp";	//要处理的原图像4
+	char fileNameOriginal5[] = "./bitmaps/bitmap5.bmp";	//要处理的原图像5
+	char fileNameOriginal6[] = "./bitmaps/bitmap6.bmp";	//要处理的原图像5
+	char fileNameOriginal7[] = "./bitmaps/bitmap7.bmp";	//要处理的原图像5
 
 	char fileNameR[] = "./bitmaps/1/bitmap_r.bmp";		//分离rgb中的R形成的图像
 	char fileNameG[] = "./bitmaps/1/bitmap_g.bmp";		//分离rgb中的G形成的图像
@@ -37,13 +40,24 @@ int main() {
 	char fileNameRegionGrowingWithSeed[] = "./bitmaps/6/bitmap_region_growing_with_seed.bmp";//基于种子点进行区域增长
 	char fileNameRegionGrowingWithoutSeed[] = "./bitmaps/6/bitmap_region_growing_without_seed.bmp";//无种子点的区域增长
 
+	char fileNameEdgeDetectionPrewitt[] = "./bitmaps/7/bitmap_edge_detection_prewitt.bmp";//边缘检测：LOG
+	char fileNameEdgeDetectionSobel[] = "./bitmaps/7/bitmap_edge_detection_sobel.bmp";//边缘检测：LOG
+	char fileNameEdgeDetectionLOG[] = "./bitmaps/7/bitmap_edge_detection_log.bmp";//边缘检测：LOG
+
+	char fileNameLineDetectoinHough[] = "./bitmaps/8/bitmap_line_detection_hough.bmp";//直线检测：Hough
+
+	char fileNameConnectedDomainAnalysis[] = "./bitmaps/9/bitmap_connected_domain_analysis.bmp";//连通域分析
+	char fileNameOutlineExtract[] = "./bitmaps/9/bitmap_outline_extract.bmp";//轮廓提取
 	//要处理的图像对象
 	CMyBitmap		*myBitmap,		//原图1
 					*myGrayBitmap,	//灰度图
 					*myGrayBitmap2,	//灰度图2（均衡化后的）
 					*myGrayBitmap3,	//灰度图3（均衡化后的）
 					*myGrayBitmap4,	//灰度图4
-					*noiseBitmap;	//有噪声的图像
+					*myGrayBitmap5,	//灰度图5
+					*noiseBitmap,	//有噪声的图像
+					*lineDetection,	//直线检测用的图像
+					*areaRemark;	//区域标记与轮廓提取用的图像
 
 	CBitmapHandle	myBitmapHandler;//图像处理工具对象
 
@@ -96,12 +110,32 @@ int main() {
 	// 解析要处理的灰度图
 	myGrayBitmap4 = myBitmapHandler.ReadBitmapFile(fileNameOriginal4);
 	if (myGrayBitmap4 != NULL) {
-		//区域增长
+		//基于种子点的区域增长
 		POINT seedPoint;
 		seedPoint.x = 350;
 		seedPoint.y = 891;
 		myBitmapHandler.RegionGrowingWithSeed(myGrayBitmap4, fileNameRegionGrowingWithSeed, seedPoint, 90);
 		myBitmapHandler.RegionGrowingWithoutSeed(myGrayBitmap4, fileNameRegionGrowingWithoutSeed);
+	}
+	// 解析要处理的灰度图
+	myGrayBitmap5 = myBitmapHandler.ReadBitmapFile(fileNameOriginal5);
+	if (myGrayBitmap5 != NULL) {
+		//边缘检测
+		myBitmapHandler.EdgeDetectionPrewitt(myGrayBitmap5, fileNameEdgeDetectionPrewitt);
+		myBitmapHandler.EdgeDetectionSobel(myGrayBitmap5, fileNameEdgeDetectionSobel);
+		myBitmapHandler.EdgeDetectionLOG(myGrayBitmap5, fileNameEdgeDetectionLOG);
+	}
+
+	lineDetection = myBitmapHandler.ReadBitmapFile(fileNameOriginal6);
+	if (lineDetection != NULL) {
+		myBitmapHandler.LineDetectionHough(lineDetection, fileNameLineDetectoinHough);
+	}
+
+	areaRemark = myBitmapHandler.ReadBitmapFile(fileNameOriginal7);
+	if (areaRemark != NULL) {
+		//区域标记与轮廓提取
+		myBitmapHandler.ConnectedDomainAnalysis(areaRemark, fileNameConnectedDomainAnalysis);
+		myBitmapHandler.OutlineExtract(areaRemark, fileNameOutlineExtract);
 	}
 	system("pause");
 	return 0;

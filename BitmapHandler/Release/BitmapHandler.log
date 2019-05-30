@@ -1,0 +1,91 @@
+﻿  CBitmapHandle.cpp
+g:\vsproject\bitmaphandler\bitmaphandler\splitstruct.h(8): warning C4091: “typedef ”: 没有声明变量时忽略“SplitStruct”的左侧
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(26): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(71): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(72): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(73): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(120): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(189): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(183): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(239): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(222): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(325): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(337): warning C4244: “初始化”: 从“double”转换到“BYTE”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(303): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(367): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(356): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(434): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(423): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(505): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(494): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(569): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(558): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(640): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(628): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(687): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(677): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(736): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(726): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(777): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(789): warning C4244: “初始化”: 从“int”转换到“float”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(794): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(795): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(767): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(832): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(822): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(880): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(870): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(940): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(930): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1030): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1057): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1047): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1215): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1205): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1238): warning C4101: “dOver”: 未引用的局部变量
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1235): warning C4101: “nTemp”: 未引用的局部变量
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1341): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1331): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1409): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1399): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1476): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1466): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1494): warning C4101: “gbquadIndex”: 未引用的局部变量
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1574): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1587): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1617): warning C4244: “初始化”: 从“double”转换到“int”，可能丢失数据
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1564): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1697): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1687): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1741): warning C4018: “<”: 有符号/无符号不匹配
+g:\vsproject\bitmaphandler\bitmaphandler\cbitmaphandle.cpp(1731): error C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  d:\windows kits\10\include\10.0.17134.0\ucrt\stdio.h(208): note: 参见“fopen”的声明
+  CMyBitmap.cpp
+  main.cpp
+g:\vsproject\bitmaphandler\bitmaphandler\main.cpp(97): warning C4305: “参数”: 从“double”到“float”截断
